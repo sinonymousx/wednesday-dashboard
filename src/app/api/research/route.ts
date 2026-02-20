@@ -25,8 +25,9 @@ export async function GET() {
     });
 
     return Response.json({ items });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching research data:", error);
-    return Response.json({ items: [], error: error.message });
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    return Response.json({ items: [], error: errMsg });
   }
 }
