@@ -1,15 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { DashboardLayout } from "@/components/sidebar";
 import { 
   Brain, 
-  Search,
   RefreshCw,
   TrendingUp,
   Users,
-  Building2,
-  Target
+  Building2
 } from "lucide-react";
 
 interface ResearchItem {
@@ -33,22 +30,16 @@ export default function ResearchPage() {
         if (data.items && data.items.length > 0) {
           setItems(data.items);
         } else {
-          // Fallback to hardcoded data if no Firebase data yet
           setItems([
-            { id: "1", title: "Robert E. Armel Jr.", description: "DeCA Pacific - Overseas Product Specialist. Based Okinawa. Works with Eric Bable.", category: 'partner', status: 'completed' },
-            { id: "2", title: "Jasmine Johnson", description: "MCCS Okinawa - Training & Curriculum Specialist. Key decision maker for Youth Programs.", category: 'partner', status: 'completed' },
-            { id: "3", title: "Okinawa Language School A", description: "Competitor - offers English, Japanese courses. Pricing: ¥3000/hr", category: 'competitor', status: 'pending' },
-            { id: "4", title: "STEM Education Trends 2026", description: "Solar ovens, bristle bots, AI for kids, sustainable design", category: 'courses', status: 'completed' },
-            { id: "5", title: "PACAF 18 FSS Youth Programs", description: "Youth Centers, Teen Centers - potential contract opportunities", category: 'market', status: 'researching' },
-            { id: "6", title: "DeCA Procurement Cycle", description: "Organic/as-needed basis unless contract vehicle specified", category: 'market', status: 'completed' },
+            { id: "1", title: "Robert E. Armel Jr.", description: "DeCA Pacific - Overseas Product Specialist. Based Okinawa.", category: 'partner', status: 'completed' },
+            { id: "2", title: "Jasmine Johnson", description: "MCCS Okinawa - Training & Curriculum Specialist.", category: 'partner', status: 'completed' },
+            { id: "3", title: "Okinawa Language School A", description: "Competitor - offers English, Japanese courses.", category: 'competitor', status: 'pending' },
+            { id: "4", title: "STEM Education Trends 2026", description: "Solar ovens, bristle bots, AI for kids", category: 'courses', status: 'completed' },
+            { id: "5", title: "PACAF 18 FSS Youth Programs", description: "Youth Centers, Teen Centers", category: 'market', status: 'researching' },
           ]);
         }
       } catch (e) {
         console.error('Failed to fetch research:', e);
-        setItems([
-          { id: "1", title: "Robert E. Armel Jr.", description: "DeCA Pacific - Overseas Product Specialist. Based Okinawa.", category: 'partner', status: 'completed' },
-          { id: "2", title: "Jasmine Johnson", description: "MCCS Okinawa - Training & Curriculum Specialist.", category: 'partner', status: 'completed' },
-        ]);
       }
       setLoading(false);
     }
@@ -78,41 +69,35 @@ export default function ResearchPage() {
   };
 
   return (
-    <DashboardLayout>
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-8">
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-zinc-100 tracking-tight">Research</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Research</h1>
             <p className="text-zinc-500 mt-1">What I've learned. What I'm learning.</p>
           </div>
           <button 
             onClick={() => setLoading(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-400 hover:text-zinc-200"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
 
-        {/* Filter Tabs */}
         <div className="flex gap-2 flex-wrap">
           {(['all', 'partner', 'competitor', 'courses', 'market'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                filter === f 
-                  ? "bg-zinc-800 text-zinc-100" 
-                  : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900"
+              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${
+                filter === f ? "bg-zinc-800 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
-              {f !== 'all' && categoryIcons[f]}
               {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
           ))}
         </div>
 
-        {/* Research Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {loading ? (
             <div className="col-span-2 flex items-center justify-center py-12">
@@ -145,6 +130,6 @@ export default function ResearchPage() {
           )}
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }
