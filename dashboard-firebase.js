@@ -7,7 +7,6 @@
  * - dashboard/status - Current status (isRunning, currentTask)
  * - dashboard/stats - Statistics (heartbeatsToday, pipeline)
  * - dashboard/memory - Memory files list
- * - dashboard/research/items/{docId} - Research items
  */
 
 const { initializeApp, cert, getApps } = require('firebase-admin/app');
@@ -72,37 +71,6 @@ async function updateStats(heartbeatsToday, pipeline = 0) {
   }
 }
 
-// Write research item to dashboard/research/items
-async function writeResearch(title, description, category, status) {
-  try {
-    const db = getDb();
-    const docRef = await db.collection('dashboard').doc('research').collection('items').add({
-      title,
-      description,
-      category, // 'partner' | 'competitor' | 'market' | 'courses'
-      status,   // 'researching' | 'completed' | 'pending'
-      updatedAt: new Date().toISOString(),
-    });
-    console.log(`✅ Research item added: ${title}`);
-    return docRef.id;
-  } catch (e) {
-    console.error('Failed to write research:', e.message);
-    return null;
-  }
-}
-
-// Get all research items
-async function getResearch() {
-  try {
-    const db = getDb();
-    const snap = await db.collection('dashboard').doc('research').collection('items').get();
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  } catch (e) {
-    console.error('Failed to get research:', e.message);
-    return [];
-  }
-}
-
 // CLI handler
 const args = process.argv.slice(2);
 const command = args[0];
@@ -120,33 +88,10 @@ if (command === 'activity') {
   const heartbeats = parseInt(args[1] || '0');
   const pipeline = parseInt(args[2] || '0');
   updateStats(heartbeats, pipeline).then(() => process.exit(0));
-} else if (command === 'research') {
-  const action = args[1];
-  if (action === 'add') {
-    const title = args[2] || 'New Research';
-    const description = args[3] || '';
-    const category = args[4] || 'market';
-    const status = args[5] || 'pending';
-    writeResearch(title, description, category, status).then(() => process.exit(0));
-  } else if (action === 'list') {
-    getResearch().then(items => {
-      console.log(JSON.stringify(items, null, 2));
-      process.exit(0);
-    });
-  } else {
-    console.log('Usage: node dashboard-firebase.js research <add|list> [args]');
-    console.log('  research add "title" "description" <category> <status>');
-    console.log('  research list');
-    console.log('  Categories: partner, competitor, courses, market');
-    console.log('  Status: researching, completed, pending');
-    process.exit(1);
-  }
 } else {
   console.log('Usage: node dashboard-firebase.js <command> [args]');
   console.log('Commands:');
   console.log('  activity "title" "description" [type]');
   console.log('  status true|false [task]');
   console.log('  stats <heartbeats> <pipeline>');
-  console.log('  research add "title" "description" <category> <status>');
-  console.log('  research list');
 }
