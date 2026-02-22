@@ -8,7 +8,7 @@ type DashboardTask = {
   title: string;
   owner?: string;
   due?: string;
-  status?: "open" | "blocked" | "done";
+  status?: "open" | "blocked" | "done" | "canceled";
   source?: string;
 };
 

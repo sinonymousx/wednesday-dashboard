@@ -30,7 +30,7 @@ type CriticalTask = {
   title: string;
   owner?: string;
   due?: string;
-  status?: "open" | "blocked" | "done";
+  status?: "open" | "blocked" | "done" | "canceled";
   source?: string;
 };
 
@@ -68,6 +68,24 @@ export default function Dashboard({ activity, isRunningTask, currentTask, memory
     // Simulate API call for now
     await new Promise(resolve => setTimeout(resolve, 1500));
     setLoadingAction(null);
+  };
+
+  const handleTaskAction = async (id: string, action: "complete" | "cancel") => {
+    setLoadingAction(`${action}:${id}`);
+    try {
+      const res = await fetch('/api/tasks', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, action }),
+      });
+      if (!res.ok) throw new Error('Task update failed');
+      window.location.reload();
+    } catch (e) {
+      console.error(e);
+      alert('Failed to update task');
+    } finally {
+      setLoadingAction(null);
+    }
   };
 
   return (
@@ -246,9 +264,29 @@ export default function Dashboard({ activity, isRunningTask, currentTask, memory
                     {task.source ? ` • Source: ${task.source}` : ""}
                   </p>
                 </div>
-                <span className={`text-[10px] uppercase px-2 py-1 rounded border ${task.status === "blocked" ? "text-red-300 border-red-900 bg-red-950/40" : task.status === "done" ? "text-emerald-300 border-emerald-900 bg-emerald-950/40" : "text-amber-300 border-amber-900 bg-amber-950/40"}`}>
-                  {task.status || "open"}
-                </span>
+                <div className="flex items-center gap-2">
+                  {!(task.status === "done" || task.status === "canceled") && (
+                    <>
+                      <button
+                        onClick={() => handleTaskAction(task.id, "complete")}
+                        disabled={!!loadingAction}
+                        className="text-[10px] uppercase px-2 py-1 rounded border text-emerald-300 border-emerald-900 bg-emerald-950/40 hover:bg-emerald-900/40 disabled:opacity-50"
+                      >
+                        Complete
+                      </button>
+                      <button
+                        onClick={() => handleTaskAction(task.id, "cancel")}
+                        disabled={!!loadingAction}
+                        className="text-[10px] uppercase px-2 py-1 rounded border text-zinc-300 border-zinc-700 bg-zinc-900/60 hover:bg-zinc-800/80 disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                  <span className={`text-[10px] uppercase px-2 py-1 rounded border ${task.status === "blocked" ? "text-red-300 border-red-900 bg-red-950/40" : task.status === "done" ? "text-emerald-300 border-emerald-900 bg-emerald-950/40" : task.status === "canceled" ? "text-zinc-300 border-zinc-700 bg-zinc-900/60" : "text-amber-300 border-amber-900 bg-amber-950/40"}`}>
+                    {task.status || "open"}
+                  </span>
+                </div>
               </div>
             )) : (
               <div className="p-4 text-sm text-zinc-500">No critical tasks tracked yet.</div>
