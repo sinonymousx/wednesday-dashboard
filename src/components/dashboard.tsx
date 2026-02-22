@@ -118,6 +118,24 @@ export default function Dashboard({ activity, isRunningTask, currentTask, memory
     }
   };
 
+  const handleOnboardingDone = async (pageId: string, task: string) => {
+    setLoadingAction(`onboarding:${pageId}:${task}`);
+    try {
+      const res = await fetch('/api/onboarding', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pageId, task, done: true }),
+      });
+      if (!res.ok) throw new Error('Onboarding update failed');
+      window.location.reload();
+    } catch (e) {
+      console.error(e);
+      alert('Failed to update onboarding task');
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto space-y-8 font-mono">
@@ -345,9 +363,20 @@ export default function Dashboard({ activity, isRunningTask, currentTask, memory
                   )}
                 </div>
                 {!it.error && it.openItems?.length > 0 && (
-                  <ul className="mt-2 list-disc pl-5 text-xs text-zinc-400 space-y-1">
-                    {it.openItems.slice(0, 5).map((x, idx) => <li key={`${it.id}-${idx}`}>{x}</li>)}
-                  </ul>
+                  <div className="mt-2 space-y-1">
+                    {it.openItems.slice(0, 5).map((x, idx) => (
+                      <div key={`${it.id}-${idx}`} className="flex items-center justify-between gap-2 text-xs">
+                        <span className="text-zinc-400">• {x}</span>
+                        <button
+                          onClick={() => handleOnboardingDone(it.id, x)}
+                          disabled={!!loadingAction}
+                          className="text-[10px] uppercase px-2 py-1 rounded border text-emerald-300 border-emerald-900 bg-emerald-950/40 hover:bg-emerald-900/40 disabled:opacity-50"
+                        >
+                          Mark done
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             )) : (
