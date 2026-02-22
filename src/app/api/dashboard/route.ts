@@ -46,6 +46,10 @@ export async function GET() {
     const onboardingDoc = await db.collection('dashboard').doc('onboarding').get();
     const onboarding = onboardingDoc.data() || { items: [], totalOpen: 0 };
 
+    // Get non-repeating critical calendar events
+    const calendarDoc = await db.collection('dashboard').doc('calendar_critical').get();
+    const calendarCritical = calendarDoc.data() || { items: [] };
+
     return Response.json({
       activity,
       memoryFiles: filesData.files || [],
@@ -54,7 +58,8 @@ export async function GET() {
       telemetry: status.telemetry || null,
       stats,
       criticalTasks: tasksData.items || [],
-      onboarding
+      onboarding,
+      calendarCritical
     });
   } catch (error) {
     console.error("Error fetching dashboard data:", error);
@@ -72,7 +77,8 @@ export async function GET() {
       telemetry: null,
       stats: { heartbeatsToday: 0, pipeline: 0 },
       criticalTasks: [],
-      onboarding: { items: [], totalOpen: 0 }
+      onboarding: { items: [], totalOpen: 0 },
+      calendarCritical: { items: [] }
     });
   }
 }

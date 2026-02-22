@@ -10,6 +10,7 @@ type DashboardTask = {
   due?: string;
   status?: "open" | "blocked" | "done" | "canceled";
   source?: string;
+  direction?: "i_owe" | "owe_me";
 };
 
 type Telemetry = {
@@ -31,6 +32,13 @@ type OnboardingItem = {
   url?: string;
 };
 
+type CalendarCriticalItem = {
+  id: string;
+  summary: string;
+  starts: string;
+  ends: string;
+};
+
 type DashboardData = {
   activity: any[];
   isRunningTask: boolean;
@@ -39,6 +47,7 @@ type DashboardData = {
   criticalTasks: DashboardTask[];
   telemetry: Telemetry | null;
   onboarding: { items: OnboardingItem[]; totalOpen: number };
+  calendarCritical: { items: CalendarCriticalItem[] };
 };
 
 const fallbackData = (): DashboardData => ({
@@ -56,6 +65,7 @@ const fallbackData = (): DashboardData => ({
   criticalTasks: [],
   telemetry: null,
   onboarding: { items: [], totalOpen: 0 },
+  calendarCritical: { items: [] },
 });
 
 export default function Home() {
@@ -91,6 +101,7 @@ export default function Home() {
       criticalTasks={data.criticalTasks || []}
       telemetry={data.telemetry}
       onboarding={data.onboarding || { items: [], totalOpen: 0 }}
+      calendarCritical={data.calendarCritical || { items: [] }}
     />
   );
 }
