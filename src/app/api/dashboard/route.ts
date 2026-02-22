@@ -50,6 +50,10 @@ export async function GET() {
     const calendarDoc = await db.collection('dashboard').doc('calendar_critical').get();
     const calendarCritical = calendarDoc.data() || { items: [] };
 
+    // CPR certification tracker
+    const cprDoc = await db.collection('dashboard').doc('cpr_status').get();
+    const cprStatus = cprDoc.data() || { items: [], dueSoonCount: 0 };
+
     return Response.json({
       activity,
       memoryFiles: filesData.files || [],
@@ -59,7 +63,8 @@ export async function GET() {
       stats,
       criticalTasks: tasksData.items || [],
       onboarding,
-      calendarCritical
+      calendarCritical,
+      cprStatus
     });
   } catch (error) {
     console.error("Error fetching dashboard data:", error);
@@ -78,7 +83,8 @@ export async function GET() {
       stats: { heartbeatsToday: 0, pipeline: 0 },
       criticalTasks: [],
       onboarding: { items: [], totalOpen: 0 },
-      calendarCritical: { items: [] }
+      calendarCritical: { items: [] },
+      cprStatus: { items: [], dueSoonCount: 0 }
     });
   }
 }

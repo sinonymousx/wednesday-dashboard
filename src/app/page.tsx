@@ -39,6 +39,18 @@ type CalendarCriticalItem = {
   ends: string;
 };
 
+type CprItem = {
+  email: string;
+  name: string;
+  cprDueDate?: string;
+  status?: string;
+  scheduledDate?: string;
+  onlineTrainingCompleted?: boolean;
+  daysUntilDue?: number | null;
+  lastEmployeeReplyAt?: string;
+  lastNudgeAt?: string;
+};
+
 type DashboardData = {
   activity: any[];
   isRunningTask: boolean;
@@ -48,6 +60,7 @@ type DashboardData = {
   telemetry: Telemetry | null;
   onboarding: { items: OnboardingItem[]; totalOpen: number };
   calendarCritical: { items: CalendarCriticalItem[] };
+  cprStatus: { items: CprItem[]; dueSoonCount: number };
 };
 
 const fallbackData = (): DashboardData => ({
@@ -66,6 +79,7 @@ const fallbackData = (): DashboardData => ({
   telemetry: null,
   onboarding: { items: [], totalOpen: 0 },
   calendarCritical: { items: [] },
+  cprStatus: { items: [], dueSoonCount: 0 },
 });
 
 export default function Home() {
@@ -102,6 +116,7 @@ export default function Home() {
       telemetry={data.telemetry}
       onboarding={data.onboarding || { items: [], totalOpen: 0 }}
       calendarCritical={data.calendarCritical || { items: [] }}
+      cprStatus={data.cprStatus || { items: [], dueSoonCount: 0 }}
     />
   );
 }

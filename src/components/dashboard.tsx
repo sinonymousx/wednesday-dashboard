@@ -61,6 +61,18 @@ type CalendarCriticalItem = {
   ends: string;
 };
 
+type CprItem = {
+  email: string;
+  name: string;
+  cprDueDate?: string;
+  status?: string;
+  scheduledDate?: string;
+  onlineTrainingCompleted?: boolean;
+  daysUntilDue?: number | null;
+  lastEmployeeReplyAt?: string;
+  lastNudgeAt?: string;
+};
+
 interface DashboardProps {
   activity: ActivityItem[];
   isRunningTask: boolean;
@@ -70,6 +82,7 @@ interface DashboardProps {
   telemetry?: Telemetry | null;
   onboarding?: { items: OnboardingItem[]; totalOpen: number };
   calendarCritical?: { items: CalendarCriticalItem[] };
+  cprStatus?: { items: CprItem[]; dueSoonCount: number };
 }
 
 const activityIcons: Record<string, React.ReactNode> = {
@@ -90,7 +103,7 @@ const activityColors: Record<string, string> = {
   error: "bg-red-950/30 text-red-400 border-red-900/50",
 };
 
-export default function Dashboard({ activity, isRunningTask, currentTask, memoryFiles, criticalTasks, telemetry, onboarding, calendarCritical }: DashboardProps) {
+export default function Dashboard({ activity, isRunningTask, currentTask, memoryFiles, criticalTasks, telemetry, onboarding, calendarCritical, cprStatus }: DashboardProps) {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
   const handleAction = async (action: string) => {
@@ -402,6 +415,39 @@ export default function Dashboard({ activity, isRunningTask, currentTask, memory
               </div>
             )) : (
               <div className="p-4 text-sm text-zinc-500">No non-repeating critical events found.</div>
+            )}
+          </div>
+        </div>
+
+        {/* CPR Certification Watch */}
+        <div className="border border-zinc-800 bg-zinc-900/30 rounded-lg overflow-hidden">
+          <div className="p-4 border-b border-zinc-800 bg-zinc-900/50 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">CPR Certification Watch</h2>
+            <span className="text-xs text-zinc-500">{cprStatus?.dueSoonCount ?? 0} due within 60 days</span>
+          </div>
+          <div className="divide-y divide-zinc-800/50">
+            {(cprStatus?.items || []).length > 0 ? (cprStatus?.items || [])
+              .filter((x) => (x.daysUntilDue ?? 9999) <= 60 || x.status === 'scheduled')
+              .sort((a, b) => (a.daysUntilDue ?? 9999) - (b.daysUntilDue ?? 9999))
+              .map((x) => (
+              <div key={x.email} className="p-4 flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm text-zinc-200">{x.name} <span className="text-zinc-500">({x.email})</span></p>
+                  <p className="text-xs text-zinc-500 mt-1">
+                    Due: {x.cprDueDate || '--'}
+                    {typeof x.daysUntilDue === 'number' ? ` • ${x.daysUntilDue} days left` : ''}
+                    {x.scheduledDate ? ` • Scheduled: ${x.scheduledDate}` : ''}
+                  </p>
+                  <p className="text-xs text-zinc-500 mt-1">
+                    Last reply: {x.lastEmployeeReplyAt || 'none'} • Last nudge: {x.lastNudgeAt || 'none'}
+                  </p>
+                </div>
+                <span className={`text-[10px] uppercase px-2 py-1 rounded border ${x.status === 'completed' ? 'text-emerald-300 border-emerald-900 bg-emerald-950/40' : x.status === 'scheduled' ? 'text-cyan-300 border-cyan-900 bg-cyan-950/40' : 'text-amber-300 border-amber-900 bg-amber-950/40'}`}>
+                  {x.status || 'unknown'}
+                </span>
+              </div>
+            )) : (
+              <div className="p-4 text-sm text-zinc-500">No CPR data synced yet. Add due dates in memory/cpr-tracker.json.</div>
             )}
           </div>
         </div>
