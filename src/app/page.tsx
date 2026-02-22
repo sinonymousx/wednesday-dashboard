@@ -3,11 +3,21 @@
 import { useEffect, useState } from "react";
 import Dashboard from "@/components/dashboard";
 
+type DashboardTask = {
+  id: string;
+  title: string;
+  owner?: string;
+  due?: string;
+  status?: "open" | "blocked" | "done";
+  source?: string;
+};
+
 type DashboardData = {
   activity: any[];
   isRunningTask: boolean;
   currentTask: string | null;
-  files: string[];
+  memoryFiles: string[];
+  criticalTasks: DashboardTask[];
 };
 
 const fallbackData = (): DashboardData => ({
@@ -21,7 +31,8 @@ const fallbackData = (): DashboardData => ({
   ],
   isRunningTask: false,
   currentTask: null,
-  files: [],
+  memoryFiles: [],
+  criticalTasks: [],
 });
 
 export default function Home() {
@@ -53,7 +64,8 @@ export default function Home() {
       activity={data.activity || []}
       isRunningTask={data.isRunningTask || false}
       currentTask={data.currentTask}
-      memoryFiles={data.files || []}
+      memoryFiles={data.memoryFiles || []}
+      criticalTasks={data.criticalTasks || []}
     />
   );
 }

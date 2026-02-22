@@ -1,6 +1,3 @@
-'use client'
-
-
 "use client";
 
 import { DashboardLayout } from "@/components/sidebar";
@@ -28,11 +25,21 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+type CriticalTask = {
+  id: string;
+  title: string;
+  owner?: string;
+  due?: string;
+  status?: "open" | "blocked" | "done";
+  source?: string;
+};
+
 interface DashboardProps {
   activity: ActivityItem[];
   isRunningTask: boolean;
   currentTask: string | null;
   memoryFiles: string[];
+  criticalTasks: CriticalTask[];
 }
 
 const activityIcons: Record<string, React.ReactNode> = {
@@ -53,7 +60,7 @@ const activityColors: Record<string, string> = {
   error: "bg-red-950/30 text-red-400 border-red-900/50",
 };
 
-export default function Dashboard({ activity, isRunningTask, currentTask, memoryFiles }: DashboardProps) {
+export default function Dashboard({ activity, isRunningTask, currentTask, memoryFiles, criticalTasks }: DashboardProps) {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
   const handleAction = async (action: string) => {
@@ -219,6 +226,33 @@ export default function Dashboard({ activity, isRunningTask, currentTask, memory
               </div>
               <p className="text-xs text-zinc-600 mt-2">Last consolidation: 14m ago</p>
             </div>
+          </div>
+        </div>
+
+        {/* Critical Tasks */}
+        <div className="border border-zinc-800 bg-zinc-900/30 rounded-lg overflow-hidden">
+          <div className="p-4 border-b border-zinc-800 bg-zinc-900/50 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">Critical Tasks</h2>
+            <span className="text-xs text-zinc-500">{criticalTasks.filter(t => t.status !== "done").length} open</span>
+          </div>
+          <div className="divide-y divide-zinc-800/50">
+            {criticalTasks.length > 0 ? criticalTasks.map((task) => (
+              <div key={task.id} className="p-4 flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm text-zinc-200">{task.title}</p>
+                  <p className="text-xs text-zinc-500 mt-1">
+                    {task.owner ? `Owner: ${task.owner}` : "Owner: unassigned"}
+                    {task.due ? ` • Due: ${task.due}` : ""}
+                    {task.source ? ` • Source: ${task.source}` : ""}
+                  </p>
+                </div>
+                <span className={`text-[10px] uppercase px-2 py-1 rounded border ${task.status === "blocked" ? "text-red-300 border-red-900 bg-red-950/40" : task.status === "done" ? "text-emerald-300 border-emerald-900 bg-emerald-950/40" : "text-amber-300 border-amber-900 bg-amber-950/40"}`}>
+                  {task.status || "open"}
+                </span>
+              </div>
+            )) : (
+              <div className="p-4 text-sm text-zinc-500">No critical tasks tracked yet.</div>
+            )}
           </div>
         </div>
 

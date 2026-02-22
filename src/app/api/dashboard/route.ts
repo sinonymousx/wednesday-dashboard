@@ -38,12 +38,17 @@ export async function GET() {
     const statsDoc = await db.collection('dashboard').doc('stats').get();
     const stats = statsDoc.data() || { heartbeatsToday: 0, pipeline: 0 };
 
+    // Get critical tasks
+    const tasksDoc = await db.collection('dashboard').doc('critical_tasks').get();
+    const tasksData = tasksDoc.data() || { items: [] };
+
     return Response.json({
       activity,
       memoryFiles: filesData.files || [],
       isRunningTask: status.isRunning || false,
       currentTask: status.currentTask || null,
-      stats
+      stats,
+      criticalTasks: tasksData.items || []
     });
   } catch (error) {
     console.error("Error fetching dashboard data:", error);
@@ -58,7 +63,8 @@ export async function GET() {
       memoryFiles: [],
       isRunningTask: false,
       currentTask: null,
-      stats: { heartbeatsToday: 0, pipeline: 0 }
+      stats: { heartbeatsToday: 0, pipeline: 0 },
+      criticalTasks: []
     });
   }
 }
