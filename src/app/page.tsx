@@ -12,12 +12,23 @@ type DashboardTask = {
   source?: string;
 };
 
+type Telemetry = {
+  model?: string;
+  contextUsed?: number;
+  contextMax?: number;
+  compactions?: number;
+  queueDepth?: number;
+  tokens?: string;
+  spend?: string;
+};
+
 type DashboardData = {
   activity: any[];
   isRunningTask: boolean;
   currentTask: string | null;
   memoryFiles: string[];
   criticalTasks: DashboardTask[];
+  telemetry: Telemetry | null;
 };
 
 const fallbackData = (): DashboardData => ({
@@ -33,6 +44,7 @@ const fallbackData = (): DashboardData => ({
   currentTask: null,
   memoryFiles: [],
   criticalTasks: [],
+  telemetry: null,
 });
 
 export default function Home() {
@@ -66,6 +78,7 @@ export default function Home() {
       currentTask={data.currentTask}
       memoryFiles={data.memoryFiles || []}
       criticalTasks={data.criticalTasks || []}
+      telemetry={data.telemetry}
     />
   );
 }

@@ -47,6 +47,7 @@ export async function GET() {
       memoryFiles: filesData.files || [],
       isRunningTask: status.isRunning || false,
       currentTask: status.currentTask || null,
+      telemetry: status.telemetry || null,
       stats,
       criticalTasks: tasksData.items || []
     });
@@ -63,6 +64,7 @@ export async function GET() {
       memoryFiles: [],
       isRunningTask: false,
       currentTask: null,
+      telemetry: null,
       stats: { heartbeatsToday: 0, pipeline: 0 },
       criticalTasks: []
     });

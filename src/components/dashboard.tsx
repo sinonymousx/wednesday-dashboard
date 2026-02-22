@@ -34,12 +34,23 @@ type CriticalTask = {
   source?: string;
 };
 
+type Telemetry = {
+  model?: string;
+  contextUsed?: number;
+  contextMax?: number;
+  compactions?: number;
+  queueDepth?: number;
+  tokens?: string;
+  spend?: string;
+};
+
 interface DashboardProps {
   activity: ActivityItem[];
   isRunningTask: boolean;
   currentTask: string | null;
   memoryFiles: string[];
   criticalTasks: CriticalTask[];
+  telemetry?: Telemetry | null;
 }
 
 const activityIcons: Record<string, React.ReactNode> = {
@@ -60,7 +71,7 @@ const activityColors: Record<string, string> = {
   error: "bg-red-950/30 text-red-400 border-red-900/50",
 };
 
-export default function Dashboard({ activity, isRunningTask, currentTask, memoryFiles, criticalTasks }: DashboardProps) {
+export default function Dashboard({ activity, isRunningTask, currentTask, memoryFiles, criticalTasks, telemetry }: DashboardProps) {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
   const handleAction = async (action: string) => {
@@ -204,34 +215,35 @@ export default function Dashboard({ activity, isRunningTask, currentTask, memory
           {/* Stats Sidebar */}
           <div className="space-y-4">
             <div className="border border-zinc-800 bg-zinc-900/30 rounded-lg p-5">
-              <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">Vital Signs</h3>
-              <div className="space-y-6">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-zinc-400">System Load</span>
-                    <span className="text-emerald-500">12%</span>
-                  </div>
-                  <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500/50 w-[12%]"></div>
-                  </div>
+              <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">AI Telemetry</h3>
+              <div className="space-y-3 text-xs">
+                <div className="flex justify-between gap-3">
+                  <span className="text-zinc-500">Model</span>
+                  <span className="text-zinc-200 text-right break-all">{telemetry?.model || "--"}</span>
                 </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-zinc-400">Memory Usage</span>
-                    <span className="text-purple-500">45%</span>
-                  </div>
-                  <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-purple-500/50 w-[45%]"></div>
-                  </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-zinc-500">Context</span>
+                  <span className="text-zinc-200">
+                    {telemetry?.contextUsed && telemetry?.contextMax
+                      ? `${Math.round((telemetry.contextUsed / telemetry.contextMax) * 100)}% (${telemetry.contextUsed.toLocaleString()}/${telemetry.contextMax.toLocaleString()})`
+                      : "--"}
+                  </span>
                 </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-zinc-400">Storage</span>
-                    <span className="text-cyan-500">67%</span>
-                  </div>
-                  <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-cyan-500/50 w-[67%]"></div>
-                  </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-zinc-500">Compactions</span>
+                  <span className="text-zinc-200">{telemetry?.compactions ?? "--"}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-zinc-500">Queue Depth</span>
+                  <span className="text-zinc-200">{telemetry?.queueDepth ?? "--"}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-zinc-500">Tokens</span>
+                  <span className="text-zinc-200 text-right">{telemetry?.tokens || "--"}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-zinc-500">Spend</span>
+                  <span className="text-zinc-200">{telemetry?.spend || "--"}</span>
                 </div>
               </div>
             </div>
