@@ -42,6 +42,10 @@ export async function GET() {
     const tasksDoc = await db.collection('dashboard').doc('critical_tasks').get();
     const tasksData = tasksDoc.data() || { items: [] };
 
+    // Get onboarding tracker
+    const onboardingDoc = await db.collection('dashboard').doc('onboarding').get();
+    const onboarding = onboardingDoc.data() || { items: [], totalOpen: 0 };
+
     return Response.json({
       activity,
       memoryFiles: filesData.files || [],
@@ -49,7 +53,8 @@ export async function GET() {
       currentTask: status.currentTask || null,
       telemetry: status.telemetry || null,
       stats,
-      criticalTasks: tasksData.items || []
+      criticalTasks: tasksData.items || [],
+      onboarding
     });
   } catch (error) {
     console.error("Error fetching dashboard data:", error);
@@ -66,7 +71,8 @@ export async function GET() {
       currentTask: null,
       telemetry: null,
       stats: { heartbeatsToday: 0, pipeline: 0 },
-      criticalTasks: []
+      criticalTasks: [],
+      onboarding: { items: [], totalOpen: 0 }
     });
   }
 }

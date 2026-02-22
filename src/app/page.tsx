@@ -22,6 +22,15 @@ type Telemetry = {
   spend?: string;
 };
 
+type OnboardingItem = {
+  id: string;
+  name: string;
+  openCount: number;
+  openItems: string[];
+  error?: string | null;
+  url?: string;
+};
+
 type DashboardData = {
   activity: any[];
   isRunningTask: boolean;
@@ -29,6 +38,7 @@ type DashboardData = {
   memoryFiles: string[];
   criticalTasks: DashboardTask[];
   telemetry: Telemetry | null;
+  onboarding: { items: OnboardingItem[]; totalOpen: number };
 };
 
 const fallbackData = (): DashboardData => ({
@@ -45,6 +55,7 @@ const fallbackData = (): DashboardData => ({
   memoryFiles: [],
   criticalTasks: [],
   telemetry: null,
+  onboarding: { items: [], totalOpen: 0 },
 });
 
 export default function Home() {
@@ -79,6 +90,7 @@ export default function Home() {
       memoryFiles={data.memoryFiles || []}
       criticalTasks={data.criticalTasks || []}
       telemetry={data.telemetry}
+      onboarding={data.onboarding || { items: [], totalOpen: 0 }}
     />
   );
 }

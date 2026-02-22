@@ -44,6 +44,15 @@ type Telemetry = {
   spend?: string;
 };
 
+type OnboardingItem = {
+  id: string;
+  name: string;
+  openCount: number;
+  openItems: string[];
+  error?: string | null;
+  url?: string;
+};
+
 interface DashboardProps {
   activity: ActivityItem[];
   isRunningTask: boolean;
@@ -51,6 +60,7 @@ interface DashboardProps {
   memoryFiles: string[];
   criticalTasks: CriticalTask[];
   telemetry?: Telemetry | null;
+  onboarding?: { items: OnboardingItem[]; totalOpen: number };
 }
 
 const activityIcons: Record<string, React.ReactNode> = {
@@ -71,7 +81,7 @@ const activityColors: Record<string, string> = {
   error: "bg-red-950/30 text-red-400 border-red-900/50",
 };
 
-export default function Dashboard({ activity, isRunningTask, currentTask, memoryFiles, criticalTasks, telemetry }: DashboardProps) {
+export default function Dashboard({ activity, isRunningTask, currentTask, memoryFiles, criticalTasks, telemetry, onboarding }: DashboardProps) {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
   const handleAction = async (action: string) => {
@@ -302,6 +312,40 @@ export default function Dashboard({ activity, isRunningTask, currentTask, memory
               </div>
             )) : (
               <div className="p-4 text-sm text-zinc-500">No critical tasks tracked yet.</div>
+            )}
+          </div>
+        </div>
+
+        {/* Employee Onboarding Watch */}
+        <div className="border border-zinc-800 bg-zinc-900/30 rounded-lg overflow-hidden">
+          <div className="p-4 border-b border-zinc-800 bg-zinc-900/50 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">Employee Onboarding (Notion)</h2>
+            <span className="text-xs text-zinc-500">{onboarding?.totalOpen ?? 0} pending steps</span>
+          </div>
+          <div className="divide-y divide-zinc-800/50">
+            {(onboarding?.items || []).length > 0 ? (onboarding?.items || []).map((it) => (
+              <div key={it.id} className="p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm text-zinc-200">{it.name}</p>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      {it.error ? `Error: ${it.error}` : `${it.openCount} incomplete items`}
+                    </p>
+                  </div>
+                  {it.url && (
+                    <a href={it.url} target="_blank" rel="noreferrer" className="text-xs text-cyan-400 hover:text-cyan-300">
+                      Open in Notion
+                    </a>
+                  )}
+                </div>
+                {!it.error && it.openItems?.length > 0 && (
+                  <ul className="mt-2 list-disc pl-5 text-xs text-zinc-400 space-y-1">
+                    {it.openItems.slice(0, 5).map((x, idx) => <li key={`${it.id}-${idx}`}>{x}</li>)}
+                  </ul>
+                )}
+              </div>
+            )) : (
+              <div className="p-4 text-sm text-zinc-500">No onboarding records synced yet.</div>
             )}
           </div>
         </div>
