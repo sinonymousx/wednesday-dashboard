@@ -33,7 +33,8 @@ async function seed() {
   // 2. Stats
   await db.collection('dashboard').doc('stats').set({
     heartbeatsToday: 42,
-    pipeline: 13,
+    pipeline: 3, // Focused on expansion
+    activeContracts: 2, // MCCS + OCSI
     filesProcessed: 156,
     threatsNeutralized: 7
   });
@@ -41,6 +42,18 @@ async function seed() {
 
   // 3. Activity Feed
   const activities = [
+    {
+      type: 'task',
+      title: 'Contract Expansion: MCCS',
+      description: 'Analyzing potential for Library Systems integration.',
+      timestamp: new Date().toISOString()
+    },
+    {
+      type: 'task',
+      title: 'Curriculum Upgrade: OCSI',
+      description: 'Preparing AI Ethics module for next semester.',
+      timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString()
+    },
     {
       type: 'heartbeat',
       title: 'System Optimization',

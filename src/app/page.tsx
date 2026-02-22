@@ -1,30 +1,52 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Dashboard from "@/components/dashboard";
 
-async function getDashboardData() {
-  try {
-    const res = await fetch('/api/dashboard', { next: { revalidate: 10 } });
-    if (!res.ok) throw new Error("Failed to fetch");
-    return await res.json();
-  } catch (e) {
-    console.error(e);
-    return {
-      activity: [
-        {
-          type: "heartbeat",
-          title: "System Startup",
-          description: "Dashboard initialized",
-          time: new Date().toLocaleTimeString()
-        }
-      ],
-      isRunningTask: false,
-      currentTask: null,
-      files: []
-    };
-  }
-}
+type DashboardData = {
+  activity: any[];
+  isRunningTask: boolean;
+  currentTask: string | null;
+  files: string[];
+};
 
-export default async function Home() {
-  const data = await getDashboardData();
+const fallbackData = (): DashboardData => ({
+  activity: [
+    {
+      type: "heartbeat",
+      title: "System Startup",
+      description: "Dashboard initialized",
+      time: new Date().toLocaleTimeString(),
+    },
+  ],
+  isRunningTask: false,
+  currentTask: null,
+  files: [],
+});
+
+export default function Home() {
+  const [data, setData] = useState<DashboardData>(() => fallbackData());
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      try {
+        const res = await fetch("/api/dashboard", { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to fetch /api/dashboard");
+        const json = await res.json();
+        if (!cancelled) setData(json);
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) setData(fallbackData());
+      }
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <Dashboard

@@ -1,3 +1,8 @@
+'use client'
+
+
+"use client";
+
 import { DashboardLayout } from "@/components/sidebar";
 import { ActivityItem } from "@/types";
 import { 
