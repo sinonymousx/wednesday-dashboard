@@ -15,18 +15,38 @@ export async function PATCH(request: Request) {
     const body = await request.json();
     const docRef = db.collection('dashboard').doc('antigravity');
 
+    const notifyDiscord = async (msg: string) => {
+      const url = process.env.DISCORD_WEBHOOK_URL;
+      if (!url) return;
+      try {
+        await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: `🕷️ **Wednesday Dashboard:** ${msg}` })
+        });
+      } catch (e) {
+        console.error("Webhook failed", e);
+      }
+    };
+
     if (body.action === 'submit_objective') {
       await docRef.set({ objective: body.objective, specStatus: 'pending_narrative', narrative: null, feedback: null }, { merge: true });
+      await notifyDiscord(`New overarching objective submitted: *"${body.objective}"*`);
     } else if (body.action === 'submit_feedback') {
       await docRef.set({ feedback: body.feedback, specStatus: 'pending_narrative' }, { merge: true });
+      await notifyDiscord(`Narrative adjustment submitted: *"${body.feedback}"*`);
     } else if (body.action === 'approve_narrative') {
       await docRef.set({ specStatus: 'pending_spec' }, { merge: true });
+      await notifyDiscord(`Narrative approved. Awaiting technical specification.`);
     } else if (body.action === 'approve_spec') {
       await docRef.set({ specStatus: 'approved' }, { merge: true });
+      await notifyDiscord(`Technical specification approved. Worker initiation authorized.`);
     } else if (body.action === 'reject_spec') {
       await docRef.set({ specStatus: 'idle', proposedSpec: null, objective: null, narrative: null, feedback: null }, { merge: true });
+      await notifyDiscord(`Objective rejected and reset.`);
     } else if (body.action === 'reset_goal') {
       await docRef.set({ specStatus: 'idle', proposedSpec: null, objective: null, narrative: null, feedback: null, currentSprint: null, ticket: null, status: 'idle' }, { merge: true });
+      await notifyDiscord(`Pipeline halted and reset by operator.`);
     }
 
     return Response.json({ success: true });

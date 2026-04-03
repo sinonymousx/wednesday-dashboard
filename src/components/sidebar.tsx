@@ -14,7 +14,8 @@ import {
   TrendingUp,
   ChevronLeft,
   ChevronRight,
-  Skull
+  Skull,
+  FolderTree
 } from "lucide-react";
 
 interface SidebarProps {
@@ -24,6 +25,7 @@ interface SidebarProps {
 
 const navItems = [
   { href: "/", icon: LayoutDashboard, label: "Overview" },
+  { href: "/workspaces", icon: FolderTree, label: "Workspaces" },
   { href: "/activity", icon: Activity, label: "Activity" },
   { href: "/files", icon: FileText, label: "Memory Files" },
   { href: "/pipeline", icon: Users, label: "Contacts" },
