@@ -83,6 +83,7 @@ interface DashboardProps {
   onboarding?: { items: OnboardingItem[]; totalOpen: number };
   calendarCritical?: { items: CalendarCriticalItem[] };
   cprStatus?: { items: CprItem[]; dueSoonCount: number };
+  antigravity?: { status: "idle" | "running" | "error"; currentSprint?: string; ticket?: string };
 }
 
 const activityIcons: Record<string, React.ReactNode> = {
@@ -216,6 +217,32 @@ export default function Dashboard({ activity, isRunningTask, currentTask, memory
                   <p>Awaiting commands...</p>
                 </div>
               )}
+            </div>
+
+            {/* Antigravity Worker Pipeline */}
+            <div className="border border-zinc-800 bg-zinc-900/30 rounded-lg p-6 relative overflow-hidden group">
+              <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <Terminal className="h-4 w-4" />
+                Antigravity Worker Pipeline
+              </h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-500 text-sm">Status</span>
+                  <span className={`text-[10px] uppercase px-2 py-1 rounded border ${telemetry?.model /* using this as a hack or just default to the prop */ === 'x' ? '' : (antigravity?.status === 'running' ? 'text-amber-300 border-amber-900 bg-amber-950/40 animate-pulse' : antigravity?.status === 'error' ? 'text-red-300 border-red-900 bg-red-950/40' : 'text-emerald-300 border-emerald-900 bg-emerald-950/40')}`}>
+                    {antigravity?.status || 'IDLE'}
+                  </span>
+                </div>
+                <div className="flex items-start justify-between gap-3">
+                  <span className="text-zinc-500 text-sm">Active Ticket</span>
+                  <p className="text-zinc-200 text-sm font-medium">{antigravity?.ticket || "None"}</p>
+                </div>
+                <div className="space-y-2 mt-4">
+                  <span className="text-zinc-500 text-xs uppercase tracking-wider">CURRENT_SPRINT.md Spec</span>
+                  <div className="p-3 border border-zinc-800 bg-zinc-950 rounded text-xs text-zinc-400 font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
+                    {antigravity?.currentSprint || "Waiting for OpenClaw to dispatch instructions..."}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Quick Actions Grid */}

@@ -71,6 +71,22 @@ async function updateStats(heartbeatsToday, pipeline = 0) {
   }
 }
 
+// Update antigravity in dashboard/antigravity
+async function updateAntigravity(status, ticket, currentSprint) {
+  try {
+    const db = getDb();
+    await db.collection('dashboard').doc('antigravity').set({
+      status,
+      ticket: ticket || null,
+      currentSprint: currentSprint || null,
+      lastUpdate: new Date().toISOString(),
+    }, { merge: true });
+    console.log(`✅ Antigravity state updated: ${status}`);
+  } catch (e) {
+    console.error('Failed to update antigravity:', e.message);
+  }
+}
+
 // CLI handler
 const args = process.argv.slice(2);
 const command = args[0];
@@ -88,10 +104,16 @@ if (command === 'activity') {
   const heartbeats = parseInt(args[1] || '0');
   const pipeline = parseInt(args[2] || '0');
   updateStats(heartbeats, pipeline).then(() => process.exit(0));
+} else if (command === 'antigravity') {
+  const status = args[1] || 'idle';
+  const ticket = args[2] || null;
+  const currentSprint = args[3] || null;
+  updateAntigravity(status, ticket, currentSprint).then(() => process.exit(0));
 } else {
   console.log('Usage: node dashboard-firebase.js <command> [args]');
   console.log('Commands:');
   console.log('  activity "title" "description" [type]');
   console.log('  status true|false [task]');
   console.log('  stats <heartbeats> <pipeline>');
+  console.log('  antigravity "status" "ticket" "CURRENT_SPRINT.md text"');
 }

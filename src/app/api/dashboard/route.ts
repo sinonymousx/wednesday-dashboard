@@ -54,6 +54,10 @@ export async function GET() {
     const cprDoc = await db.collection('dashboard').doc('cpr_status').get();
     const cprStatus = cprDoc.data() || { items: [], dueSoonCount: 0 };
 
+    // Antigravity state
+    const antigravityDoc = await db.collection('dashboard').doc('antigravity').get();
+    const antigravity = antigravityDoc.data() || { status: "idle", currentSprint: null, ticket: null };
+
     return Response.json({
       activity,
       memoryFiles: filesData.files || [],
@@ -64,7 +68,8 @@ export async function GET() {
       criticalTasks: tasksData.items || [],
       onboarding,
       calendarCritical,
-      cprStatus
+      cprStatus,
+      antigravity
     });
   } catch (error) {
     console.error("Error fetching dashboard data:", error);

@@ -61,6 +61,7 @@ type DashboardData = {
   onboarding: { items: OnboardingItem[]; totalOpen: number };
   calendarCritical: { items: CalendarCriticalItem[] };
   cprStatus: { items: CprItem[]; dueSoonCount: number };
+  antigravity?: { status: "idle" | "running" | "error"; currentSprint?: string; ticket?: string };
 };
 
 const fallbackData = (): DashboardData => ({
@@ -117,6 +118,7 @@ export default function Home() {
       onboarding={data.onboarding || { items: [], totalOpen: 0 }}
       calendarCritical={data.calendarCritical || { items: [] }}
       cprStatus={data.cprStatus || { items: [], dueSoonCount: 0 }}
+      antigravity={data.antigravity}
     />
   );
 }
