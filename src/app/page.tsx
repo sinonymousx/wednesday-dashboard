@@ -66,8 +66,10 @@ type DashboardData = {
     currentSprint?: string; 
     ticket?: string;
     objective?: string;
+    narrative?: string;
+    feedback?: string;
     proposedSpec?: string;
-    specStatus?: "idle" | "pending_spec" | "pending_approval" | "approved" | "active";
+    specStatus?: "idle" | "pending_narrative" | "reviewing_narrative" | "pending_spec" | "pending_approval" | "approved" | "active";
   };
 };
 

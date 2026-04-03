@@ -87,6 +87,20 @@ async function updateAntigravity(status, ticket, currentSprint) {
   }
 }
 
+async function updateAntigravityNarrative(narrative) {
+  try {
+    const db = getDb();
+    await db.collection('dashboard').doc('antigravity').set({
+      narrative,
+      specStatus: 'reviewing_narrative',
+      lastUpdate: new Date().toISOString(),
+    }, { merge: true });
+    console.log(`✅ Antigravity narrative pushed for review`);
+  } catch (e) {
+    console.error('Failed to update antigravity narrative:', e.message);
+  }
+}
+
 // CLI handler
 const args = process.argv.slice(2);
 const command = args[0];
@@ -109,6 +123,9 @@ if (command === 'activity') {
   const ticket = args[2] || null;
   const currentSprint = args[3] || null;
   updateAntigravity(status, ticket, currentSprint).then(() => process.exit(0));
+} else if (command === 'antigravity-narrative') {
+  const narrative = args[1] || '';
+  updateAntigravityNarrative(narrative).then(() => process.exit(0));
 } else {
   console.log('Usage: node dashboard-firebase.js <command> [args]');
   console.log('Commands:');
@@ -116,4 +133,5 @@ if (command === 'activity') {
   console.log('  status true|false [task]');
   console.log('  stats <heartbeats> <pipeline>');
   console.log('  antigravity "status" "ticket" "CURRENT_SPRINT.md text"');
+  console.log('  antigravity-narrative "narrative text"');
 }

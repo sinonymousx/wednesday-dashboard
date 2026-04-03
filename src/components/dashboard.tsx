@@ -88,8 +88,10 @@ interface DashboardProps {
     currentSprint?: string; 
     ticket?: string;
     objective?: string;
+    narrative?: string;
+    feedback?: string;
     proposedSpec?: string;
-    specStatus?: "idle" | "pending_spec" | "pending_approval" | "approved" | "active";
+    specStatus?: "idle" | "pending_narrative" | "reviewing_narrative" | "pending_spec" | "pending_approval" | "approved" | "active";
   };
 }
 
@@ -114,6 +116,7 @@ const activityColors: Record<string, string> = {
 export default function Dashboard({ activity, isRunningTask, currentTask, memoryFiles, criticalTasks, telemetry, onboarding, calendarCritical, cprStatus, antigravity }: DashboardProps) {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [objectiveInput, setObjectiveInput] = useState("");
+  const [feedbackInput, setFeedbackInput] = useState("");
 
   const handleAction = async (action: string) => {
     setLoadingAction(action);
@@ -274,6 +277,71 @@ export default function Dashboard({ activity, isRunningTask, currentTask, memory
                   >
                     Dispatch Goal to Wednesday
                   </button>
+                </div>
+              )}
+
+              {/* Pending Narrative Phase */}
+              {antigravity?.specStatus === 'pending_narrative' && (
+                <div className="space-y-4">
+                  <div className="p-3 border border-zinc-800 bg-zinc-950 rounded text-sm text-zinc-300">
+                    <strong className="text-zinc-500 block text-xs uppercase tracking-wider mb-1">Active Goal</strong>
+                    {antigravity.objective}
+                  </div>
+                  {antigravity.feedback && (
+                    <div className="p-3 border border-amber-900/30 bg-amber-950/10 rounded text-sm text-amber-200/70">
+                      <strong className="text-amber-500/50 block text-xs uppercase tracking-wider mb-1">Your Adjustment</strong>
+                      {antigravity.feedback}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3 text-purple-400 text-sm animate-pulse mt-4">
+                    <BrainCircuit className="h-4 w-4 animate-spin" />
+                    Wednesday is analyzing the objective and drafting the overarching narrative...
+                  </div>
+                </div>
+              )}
+
+              {/* Reviewing Narrative Phase */}
+              {antigravity?.specStatus === 'reviewing_narrative' && (
+                <div className="space-y-4">
+                  <div className="p-3 border border-zinc-800 bg-zinc-950 rounded text-sm text-zinc-300">
+                    <strong className="text-zinc-500 block text-xs uppercase tracking-wider mb-1">Active Goal</strong>
+                    {antigravity.objective}
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-purple-400 text-xs uppercase tracking-wider">Proposed Narrative / Strategy</span>
+                    <div className="p-4 border border-purple-900/30 bg-purple-950/10 rounded text-sm text-zinc-300 prose prose-invert max-w-none whitespace-pre-wrap">
+                      {antigravity.narrative}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3 pt-4 border-t border-zinc-800/50">
+                    <span className="text-zinc-500 text-sm block">Adjust the narrative or approve it:</span>
+                    <textarea
+                      value={feedbackInput}
+                      onChange={(e) => setFeedbackInput(e.target.value)}
+                      placeholder="e.g. Actually, skip phase 3 for now, just focus on the A/B testing..."
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded p-3 text-sm text-zinc-200 focus:outline-none focus:border-zinc-600 min-h-[60px]"
+                    />
+                    <div className="flex gap-3">
+                      <button 
+                        onClick={() => handleAntigravityAction('approve_narrative')}
+                        disabled={!!loadingAction}
+                        className="px-4 py-2 bg-emerald-950/50 text-emerald-400 border border-emerald-900/50 rounded text-xs uppercase tracking-wider hover:bg-emerald-900/50 disabled:opacity-50"
+                      >
+                        Approve Narrative
+                      </button>
+                      <button 
+                        onClick={() => {
+                          handleAntigravityAction('submit_feedback', { feedback: feedbackInput });
+                          setFeedbackInput("");
+                        }}
+                        disabled={!feedbackInput.trim() || !!loadingAction}
+                        className="px-4 py-2 bg-amber-950/50 text-amber-400 border border-amber-900/50 rounded text-xs uppercase tracking-wider hover:bg-amber-900/50 disabled:opacity-50"
+                      >
+                        Submit Adjustment
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 

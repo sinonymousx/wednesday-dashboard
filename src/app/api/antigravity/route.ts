@@ -16,13 +16,17 @@ export async function PATCH(request: Request) {
     const docRef = db.collection('dashboard').doc('antigravity');
 
     if (body.action === 'submit_objective') {
-      await docRef.set({ objective: body.objective, specStatus: 'pending_spec' }, { merge: true });
+      await docRef.set({ objective: body.objective, specStatus: 'pending_narrative', narrative: null, feedback: null }, { merge: true });
+    } else if (body.action === 'submit_feedback') {
+      await docRef.set({ feedback: body.feedback, specStatus: 'pending_narrative' }, { merge: true });
+    } else if (body.action === 'approve_narrative') {
+      await docRef.set({ specStatus: 'pending_spec' }, { merge: true });
     } else if (body.action === 'approve_spec') {
       await docRef.set({ specStatus: 'approved' }, { merge: true });
     } else if (body.action === 'reject_spec') {
-      await docRef.set({ specStatus: 'idle', proposedSpec: null, objective: null }, { merge: true });
+      await docRef.set({ specStatus: 'idle', proposedSpec: null, objective: null, narrative: null, feedback: null }, { merge: true });
     } else if (body.action === 'reset_goal') {
-      await docRef.set({ specStatus: 'idle', proposedSpec: null, objective: null, currentSprint: null, ticket: null, status: 'idle' }, { merge: true });
+      await docRef.set({ specStatus: 'idle', proposedSpec: null, objective: null, narrative: null, feedback: null, currentSprint: null, ticket: null, status: 'idle' }, { merge: true });
     }
 
     return Response.json({ success: true });
