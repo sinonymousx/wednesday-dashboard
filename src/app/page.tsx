@@ -61,7 +61,14 @@ type DashboardData = {
   onboarding: { items: OnboardingItem[]; totalOpen: number };
   calendarCritical: { items: CalendarCriticalItem[] };
   cprStatus: { items: CprItem[]; dueSoonCount: number };
-  antigravity?: { status: "idle" | "running" | "error"; currentSprint?: string; ticket?: string };
+  antigravity?: { 
+    status: "idle" | "running" | "error"; 
+    currentSprint?: string; 
+    ticket?: string;
+    objective?: string;
+    proposedSpec?: string;
+    specStatus?: "idle" | "pending_spec" | "pending_approval" | "approved" | "active";
+  };
 };
 
 const fallbackData = (): DashboardData => ({

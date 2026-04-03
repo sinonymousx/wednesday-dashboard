@@ -83,7 +83,14 @@ interface DashboardProps {
   onboarding?: { items: OnboardingItem[]; totalOpen: number };
   calendarCritical?: { items: CalendarCriticalItem[] };
   cprStatus?: { items: CprItem[]; dueSoonCount: number };
-  antigravity?: { status: "idle" | "running" | "error"; currentSprint?: string; ticket?: string };
+  antigravity?: { 
+    status: "idle" | "running" | "error"; 
+    currentSprint?: string; 
+    ticket?: string;
+    objective?: string;
+    proposedSpec?: string;
+    specStatus?: "idle" | "pending_spec" | "pending_approval" | "approved" | "active";
+  };
 }
 
 const activityIcons: Record<string, React.ReactNode> = {
@@ -106,6 +113,7 @@ const activityColors: Record<string, string> = {
 
 export default function Dashboard({ activity, isRunningTask, currentTask, memoryFiles, criticalTasks, telemetry, onboarding, calendarCritical, cprStatus, antigravity }: DashboardProps) {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
+  const [objectiveInput, setObjectiveInput] = useState("");
 
   const handleAction = async (action: string) => {
     setLoadingAction(action);
@@ -145,6 +153,24 @@ export default function Dashboard({ activity, isRunningTask, currentTask, memory
     } catch (e) {
       console.error(e);
       alert('Failed to update onboarding task');
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
+  const handleAntigravityAction = async (action: string, data?: any) => {
+    setLoadingAction(`antigravity:${action}`);
+    try {
+      const res = await fetch('/api/antigravity', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, ...data }),
+      });
+      if (!res.ok) throw new Error('Antigravity update failed');
+      window.location.reload();
+    } catch (e) {
+      console.error(e);
+      alert('Failed to update antigravity state');
     } finally {
       setLoadingAction(null);
     }
@@ -221,28 +247,112 @@ export default function Dashboard({ activity, isRunningTask, currentTask, memory
 
             {/* Antigravity Worker Pipeline */}
             <div className="border border-zinc-800 bg-zinc-900/30 rounded-lg p-6 relative overflow-hidden group">
-              <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                <Terminal className="h-4 w-4" />
-                Antigravity Worker Pipeline
+              <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Terminal className="h-4 w-4" />
+                  Antigravity Goal Orchestration
+                </div>
+                <span className={`text-[10px] uppercase px-2 py-1 rounded border ${antigravity?.status === 'running' ? 'text-amber-300 border-amber-900 bg-amber-950/40 animate-pulse' : antigravity?.status === 'error' ? 'text-red-300 border-red-900 bg-red-950/40' : 'text-emerald-300 border-emerald-900 bg-emerald-950/40'}`}>
+                  {antigravity?.status || 'idle'}
+                </span>
               </h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-zinc-500 text-sm">Status</span>
-                  <span className={`text-[10px] uppercase px-2 py-1 rounded border ${antigravity?.status === 'running' ? 'text-amber-300 border-amber-900 bg-amber-950/40 animate-pulse' : antigravity?.status === 'error' ? 'text-red-300 border-red-900 bg-red-950/40' : 'text-emerald-300 border-emerald-900 bg-emerald-950/40'}`}>
-                    {antigravity?.status || 'idle'}
-                  </span>
+
+              {/* Goal Input Phase */}
+              {(!antigravity?.specStatus || antigravity.specStatus === 'idle') && (
+                <div className="space-y-3">
+                  <span className="text-zinc-500 text-sm">Define new overarching goal for the project:</span>
+                  <textarea
+                    value={objectiveInput}
+                    onChange={(e) => setObjectiveInput(e.target.value)}
+                    placeholder="e.g. Build a new dashboard view that visualizes 3DGS point cloud health..."
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded p-3 text-sm text-zinc-200 focus:outline-none focus:border-zinc-600 min-h-[80px]"
+                  />
+                  <button 
+                    onClick={() => handleAntigravityAction('submit_objective', { objective: objectiveInput })}
+                    disabled={!objectiveInput.trim() || !!loadingAction}
+                    className="px-4 py-2 bg-emerald-950/50 text-emerald-400 border border-emerald-900/50 rounded text-xs uppercase tracking-wider hover:bg-emerald-900/50 disabled:opacity-50"
+                  >
+                    Dispatch Goal to Wednesday
+                  </button>
                 </div>
-                <div className="flex items-start justify-between gap-3">
-                  <span className="text-zinc-500 text-sm">Active Ticket</span>
-                  <p className="text-zinc-200 text-sm font-medium">{antigravity?.ticket || "None"}</p>
-                </div>
-                <div className="space-y-2 mt-4">
-                  <span className="text-zinc-500 text-xs uppercase tracking-wider">CURRENT_SPRINT.md Spec</span>
-                  <div className="p-3 border border-zinc-800 bg-zinc-950 rounded text-xs text-zinc-400 font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
-                    {antigravity?.currentSprint || "Waiting for OpenClaw to dispatch instructions..."}
+              )}
+
+              {/* Pending Spec Phase */}
+              {antigravity?.specStatus === 'pending_spec' && (
+                <div className="space-y-4">
+                  <div className="p-3 border border-zinc-800 bg-zinc-950 rounded text-sm text-zinc-300">
+                    <strong className="text-zinc-500 block text-xs uppercase tracking-wider mb-1">Active Goal</strong>
+                    {antigravity.objective}
+                  </div>
+                  <div className="flex items-center gap-3 text-amber-500 text-sm animate-pulse">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Wednesday is analyzing the repository and drafting the technical spec...
                   </div>
                 </div>
-              </div>
+              )}
+
+              {/* Pending Approval Phase */}
+              {antigravity?.specStatus === 'pending_approval' && (
+                <div className="space-y-4">
+                  <div className="p-3 border border-zinc-800 bg-zinc-950 rounded text-sm text-zinc-300">
+                    <strong className="text-zinc-500 block text-xs uppercase tracking-wider mb-1">Active Goal</strong>
+                    {antigravity.objective}
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-cyan-400 text-xs uppercase tracking-wider">Proposed Spec (CURRENT_SPRINT.md)</span>
+                    <div className="p-3 border border-cyan-900/30 bg-cyan-950/10 rounded text-xs text-zinc-300 font-mono whitespace-pre-wrap max-h-64 overflow-y-auto">
+                      {antigravity.proposedSpec}
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => handleAntigravityAction('approve_spec')}
+                      disabled={!!loadingAction}
+                      className="px-4 py-2 bg-emerald-950/50 text-emerald-400 border border-emerald-900/50 rounded text-xs uppercase tracking-wider hover:bg-emerald-900/50 disabled:opacity-50"
+                    >
+                      Approve & Initiate Worker
+                    </button>
+                    <button 
+                      onClick={() => handleAntigravityAction('reject_spec')}
+                      disabled={!!loadingAction}
+                      className="px-4 py-2 bg-red-950/50 text-red-400 border border-red-900/50 rounded text-xs uppercase tracking-wider hover:bg-red-900/50 disabled:opacity-50"
+                    >
+                      Reject & Reset
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Active Pipeline Phase */}
+              {(antigravity?.specStatus === 'approved' || antigravity?.specStatus === 'active') && (
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <span className="text-zinc-500 text-sm block mb-1">Active Goal</span>
+                      <p className="text-zinc-200 text-sm font-medium">{antigravity?.objective}</p>
+                    </div>
+                    <button 
+                      onClick={() => handleAntigravityAction('reset_goal')}
+                      disabled={!!loadingAction}
+                      className="px-3 py-1 bg-zinc-900 text-zinc-400 border border-zinc-800 rounded text-[10px] uppercase tracking-wider hover:text-white disabled:opacity-50"
+                    >
+                      Halt & Reset
+                    </button>
+                  </div>
+                  <div className="flex items-start justify-between gap-3 pt-3 border-t border-zinc-800/50">
+                    <span className="text-zinc-500 text-sm">Active Ticket</span>
+                    <p className="text-zinc-200 text-sm font-medium">{antigravity?.ticket || "Booting worker..."}</p>
+                  </div>
+                  <div className="space-y-2 mt-4">
+                    <span className="text-emerald-500/70 text-xs uppercase tracking-wider flex items-center gap-2">
+                      <Zap className="h-3 w-3" /> CURRENT_SPRINT.md
+                    </span>
+                    <div className="p-3 border border-emerald-900/30 bg-emerald-950/10 rounded text-xs text-zinc-400 font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
+                      {antigravity?.currentSprint || antigravity?.proposedSpec || "Waiting for dispatch..."}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Quick Actions Grid */}
