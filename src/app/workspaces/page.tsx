@@ -29,11 +29,17 @@ export default function WorkspacesPage() {
         }
       } catch (e) {
         console.error(e);
-        if (!cancelled) setLoading(false);
+        if (!cancelled && loading) setLoading(false);
       }
     };
+    
     fetchState();
-    return () => { cancelled = true; };
+    const interval = setInterval(fetchState, 3000);
+    
+    return () => { 
+      cancelled = true; 
+      clearInterval(interval);
+    };
   }, []);
 
   return (

@@ -98,7 +98,7 @@ export default function Home() {
   useEffect(() => {
     let cancelled = false;
 
-    const run = async () => {
+    const fetchDashboard = async () => {
       try {
         const res = await fetch("/api/dashboard", { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to fetch /api/dashboard");
@@ -106,13 +106,15 @@ export default function Home() {
         if (!cancelled) setData(json);
       } catch (e) {
         console.error(e);
-        if (!cancelled) setData(fallbackData());
       }
     };
 
-    run();
+    fetchDashboard();
+    const interval = setInterval(fetchDashboard, 3000);
+
     return () => {
       cancelled = true;
+      clearInterval(interval);
     };
   }, []);
 
