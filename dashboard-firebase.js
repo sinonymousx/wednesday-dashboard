@@ -101,6 +101,35 @@ async function updateAntigravityNarrative(narrative) {
   }
 }
 
+async function updateAntigravitySpec(proposedSpec) {
+  try {
+    const db = getDb();
+    await db.collection('dashboard').doc('antigravity').set({
+      proposedSpec,
+      specStatus: 'pending_approval',
+      lastUpdate: new Date().toISOString(),
+    }, { merge: true });
+    console.log(`✅ Antigravity spec pushed for approval`);
+  } catch (e) {
+    console.error('Failed to update antigravity spec:', e.message);
+  }
+}
+
+async function updateAntigravityPrompts(promptsJson) {
+  try {
+    const db = getDb();
+    const prompts = JSON.parse(promptsJson);
+    await db.collection('dashboard').doc('antigravity').set({
+      prompts,
+      specStatus: 'pending_approval',
+      lastUpdate: new Date().toISOString(),
+    }, { merge: true });
+    console.log(`✅ Antigravity prompts pushed to arsenal`);
+  } catch (e) {
+    console.error('Failed to push prompts:', e.message);
+  }
+}
+
 // CLI handler
 const args = process.argv.slice(2);
 const command = args[0];
@@ -126,6 +155,13 @@ if (command === 'activity') {
 } else if (command === 'antigravity-narrative') {
   const narrative = args[1] || '';
   updateAntigravityNarrative(narrative).then(() => process.exit(0));
+} else if (command === 'antigravity-spec') {
+  const proposedSpec = args[1] || '';
+  updateAntigravitySpec(proposedSpec).then(() => process.exit(0));
+} else if (command === 'antigravity-prompts') {
+  // Pass a JSON string of prompts
+  const promptsJson = args[1] || '[]';
+  updateAntigravityPrompts(promptsJson).then(() => process.exit(0));
 } else {
   console.log('Usage: node dashboard-firebase.js <command> [args]');
   console.log('Commands:');
@@ -134,4 +170,6 @@ if (command === 'activity') {
   console.log('  stats <heartbeats> <pipeline>');
   console.log('  antigravity "status" "ticket" "CURRENT_SPRINT.md text"');
   console.log('  antigravity-narrative "narrative text"');
+  console.log('  antigravity-spec "proposed CURRENT_SPRINT.md text"');
+  console.log('  antigravity-prompts "[{id, text, status}]"');
 }

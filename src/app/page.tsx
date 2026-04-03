@@ -71,6 +71,7 @@ type DashboardData = {
     narrative?: string;
     feedback?: string;
     proposedSpec?: string;
+    prompts?: { id: string; text: string; status: "queued" | "active" | "completed" }[];
     specStatus?: "idle" | "pending_narrative" | "reviewing_narrative" | "pending_spec" | "pending_approval" | "approved" | "active";
   };
 };

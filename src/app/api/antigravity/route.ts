@@ -30,22 +30,38 @@ export async function PATCH(request: Request) {
     };
 
     if (body.action === 'submit_objective') {
-      await docRef.set({ objective: body.objective, specStatus: 'pending_narrative', narrative: null, feedback: null }, { merge: true });
+      await docRef.set({ objective: body.objective, specStatus: 'pending_narrative', narrative: null, feedback: null, prompts: [] }, { merge: true });
       await notifyDiscord(`New overarching objective submitted: *"${body.objective}"*`);
     } else if (body.action === 'submit_feedback') {
       await docRef.set({ feedback: body.feedback, specStatus: 'pending_narrative' }, { merge: true });
       await notifyDiscord(`Narrative adjustment submitted: *"${body.feedback}"*`);
     } else if (body.action === 'approve_narrative') {
       await docRef.set({ specStatus: 'pending_spec' }, { merge: true });
-      await notifyDiscord(`Narrative approved. Awaiting technical specification.`);
+      await notifyDiscord(`Narrative approved. Awaiting tactical prompts.`);
     } else if (body.action === 'approve_spec') {
-      await docRef.set({ specStatus: 'approved' }, { merge: true });
-      await notifyDiscord(`Technical specification approved. Worker initiation authorized.`);
+      await docRef.set({ specStatus: 'active' }, { merge: true });
+      await notifyDiscord(`Prompts approved. Arsenal unlocked.`);
+    } else if (body.action === 'mark_prompt_active') {
+      const docData = (await docRef.get()).data();
+      const prompts = docData?.prompts || [];
+      const updatedPrompts = prompts.map((p: any) => 
+        p.id === body.promptId ? { ...p, status: 'active' } : p
+      );
+      await docRef.set({ prompts: updatedPrompts, status: 'running', ticket: body.promptId }, { merge: true });
+      await notifyDiscord(`Prompt [${body.promptId}] activated by operator.`);
+    } else if (body.action === 'mark_prompt_complete') {
+      const docData = (await docRef.get()).data();
+      const prompts = docData?.prompts || [];
+      const updatedPrompts = prompts.map((p: any) => 
+        p.id === body.promptId ? { ...p, status: 'completed' } : p
+      );
+      await docRef.set({ prompts: updatedPrompts, status: 'idle', ticket: null }, { merge: true });
+      await notifyDiscord(`Prompt [${body.promptId}] marked complete. Standing by for next execution.`);
     } else if (body.action === 'reject_spec') {
-      await docRef.set({ specStatus: 'idle', proposedSpec: null, objective: null, narrative: null, feedback: null }, { merge: true });
+      await docRef.set({ specStatus: 'idle', proposedSpec: null, objective: null, narrative: null, feedback: null, prompts: [] }, { merge: true });
       await notifyDiscord(`Objective rejected and reset.`);
     } else if (body.action === 'reset_goal') {
-      await docRef.set({ specStatus: 'idle', proposedSpec: null, objective: null, narrative: null, feedback: null, currentSprint: null, ticket: null, status: 'idle' }, { merge: true });
+      await docRef.set({ specStatus: 'idle', proposedSpec: null, objective: null, narrative: null, feedback: null, currentSprint: null, ticket: null, status: 'idle', prompts: [] }, { merge: true });
       await notifyDiscord(`Pipeline halted and reset by operator.`);
     }
 

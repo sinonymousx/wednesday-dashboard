@@ -91,6 +91,7 @@ interface DashboardProps {
     narrative?: string;
     feedback?: string;
     proposedSpec?: string;
+    prompts?: { id: string; text: string; status: "queued" | "active" | "completed" }[];
     specStatus?: "idle" | "pending_narrative" | "reviewing_narrative" | "pending_spec" | "pending_approval" | "approved" | "active";
   };
 }
@@ -391,7 +392,7 @@ export default function Dashboard({ activity, isRunningTask, currentTask, memory
                 </div>
               )}
 
-              {/* Active Pipeline Phase */}
+              {/* Active Pipeline Phase (Manual Execution) */}
               {(antigravity?.specStatus === 'approved' || antigravity?.specStatus === 'active') && (
                 <div className="space-y-4">
                   <div className="flex items-start justify-between gap-3">
@@ -407,16 +408,66 @@ export default function Dashboard({ activity, isRunningTask, currentTask, memory
                       Halt & Reset
                     </button>
                   </div>
-                  <div className="flex items-start justify-between gap-3 pt-3 border-t border-zinc-800/50">
-                    <span className="text-zinc-500 text-sm">Active Ticket</span>
-                    <p className="text-zinc-200 text-sm font-medium">{antigravity?.ticket || "Booting worker..."}</p>
-                  </div>
-                  <div className="space-y-2 mt-4">
+                  
+                  <div className="space-y-4 mt-6 pt-4 border-t border-zinc-800/50">
                     <span className="text-emerald-500/70 text-xs uppercase tracking-wider flex items-center gap-2">
-                      <Zap className="h-3 w-3" /> CURRENT_SPRINT.md
+                      <Zap className="h-3 w-3" /> Tactical Prompts Arsenal
                     </span>
-                    <div className="p-3 border border-emerald-900/30 bg-emerald-950/10 rounded text-xs text-zinc-400 font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
-                      {antigravity?.currentSprint || antigravity?.proposedSpec || "Waiting for dispatch..."}
+                    <p className="text-xs text-zinc-500">Copy a prompt to trigger Wednesday's active surveillance. Mark as complete when Antigravity finishes the commit.</p>
+                    
+                    <div className="space-y-3">
+                      {antigravity?.prompts && antigravity.prompts.length > 0 ? (
+                        antigravity.prompts.map((prompt) => (
+                          <div key={prompt.id} className={`p-4 border rounded relative transition-all ${
+                            prompt.status === 'completed' ? 'border-zinc-800 bg-zinc-950 opacity-60' :
+                            prompt.status === 'active' ? 'border-amber-900/50 bg-amber-950/20' :
+                            'border-emerald-900/30 bg-emerald-950/10 hover:border-emerald-700/50'
+                          }`}>
+                            <div className="flex items-center justify-between mb-3">
+                              <span className={`text-[10px] uppercase px-2 py-1 rounded border ${
+                                prompt.status === 'completed' ? 'text-zinc-500 border-zinc-800 bg-zinc-900' :
+                                prompt.status === 'active' ? 'text-amber-400 border-amber-900/50 bg-amber-950/40 animate-pulse' :
+                                'text-emerald-400 border-emerald-900/50 bg-emerald-950/40'
+                              }`}>
+                                {prompt.status}
+                              </span>
+                              
+                              <div className="flex gap-2">
+                                {prompt.status !== 'completed' && (
+                                  <button 
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(prompt.text);
+                                      if (prompt.status === 'queued') {
+                                        handleAntigravityAction('mark_prompt_active', { promptId: prompt.id });
+                                      }
+                                    }}
+                                    disabled={!!loadingAction}
+                                    className="px-3 py-1 bg-zinc-900 text-zinc-300 border border-zinc-700 rounded text-[10px] uppercase tracking-wider hover:bg-zinc-800 disabled:opacity-50"
+                                  >
+                                    Copy Prompt
+                                  </button>
+                                )}
+                                {prompt.status === 'active' && (
+                                  <button 
+                                    onClick={() => handleAntigravityAction('mark_prompt_complete', { promptId: prompt.id })}
+                                    disabled={!!loadingAction}
+                                    className="px-3 py-1 bg-emerald-950 text-emerald-400 border border-emerald-900 rounded text-[10px] uppercase tracking-wider hover:bg-emerald-900 disabled:opacity-50"
+                                  >
+                                    Mark Complete
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-xs text-zinc-300 font-mono whitespace-pre-wrap">
+                              {prompt.text}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-6 border border-zinc-800 border-dashed rounded text-center text-sm text-zinc-500">
+                          Wednesday is drafting the tactical prompts...
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
