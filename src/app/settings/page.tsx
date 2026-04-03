@@ -8,15 +8,63 @@ import {
   Github,
   ExternalLink,
   Database,
-  Activity
+  Activity,
+  Loader2,
+  Check
 } from "lucide-react";
+import { getFirestore, doc, onSnapshot, setDoc } from "firebase/firestore";
+import { app } from "@/lib/firebase";
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
+  const [reposListing, setReposListing] = useState<any[]>([]);
+  const [settings, setSettings] = useState<any>({ tracked_repos: ["sinonymousx/wednesday-dashboard"] });
+  const [loadingRepos, setLoadingRepos] = useState(true);
 
   useEffect(() => {
-    setLoading(false);
+    // Fetch GitHub Repos
+    fetch("https://api.github.com/users/sinonymousx/repos?per_page=100&sort=updated")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setReposListing(data);
+        setLoadingRepos(false);
+      })
+      .catch(e => {
+        console.error(e);
+        setLoadingRepos(false);
+      });
+
+    // Firebase realtime listener for Settings
+    if (!app) return;
+    const db = getFirestore(app);
+    const unsubscribe = onSnapshot(doc(db, "dashboard", "settings"), (docSnap) => {
+      if (docSnap.exists()) {
+        setSettings(docSnap.data());
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
+
+  const toggleRepo = async (repoFullName: string) => {
+    if (!app) return;
+    const db = getFirestore(app);
+    const currentTracked = settings.tracked_repos || [];
+    let newTracked;
+    
+    if (currentTracked.includes(repoFullName)) {
+      newTracked = currentTracked.filter((r: string) => r !== repoFullName);
+    } else {
+      newTracked = [...currentTracked, repoFullName];
+    }
+
+    try {
+      await setDoc(doc(db, "dashboard", "settings"), { tracked_repos: newTracked }, { merge: true });
+    } catch (e) {
+      console.error("Failed to update settings", e);
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -54,6 +102,54 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* GitHub Repositories Selector */}
+        <div className="border border-zinc-800 bg-zinc-900/50 rounded-lg p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-zinc-200 flex items-center gap-2">
+              <Github className="h-5 w-5 text-zinc-500" />
+              GitHub Projects
+            </h2>
+            {loadingRepos && <Loader2 className="h-4 w-4 text-zinc-500 animate-spin" />}
+          </div>
+          <p className="text-sm text-zinc-400">Select which repositories you want to track status for through Antigravity.</p>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+            {reposListing.map((repo) => {
+              const isSelected = (settings.tracked_repos || []).includes(repo.full_name);
+              return (
+                <button
+                  key={repo.id}
+                  onClick={() => toggleRepo(repo.full_name)}
+                  className={`flex items-start gap-3 p-3 text-left rounded-lg border transition-all duration-200
+                    ${isSelected 
+                      ? 'bg-zinc-800/80 border-emerald-500/50' 
+                      : 'bg-zinc-900/50 border-zinc-800 hover:border-zinc-700'
+                    }`}
+                >
+                  <div className={`mt-0.5 flex-shrink-0 h-4 w-4 rounded-sm border flex items-center justify-center
+                    ${isSelected 
+                      ? 'bg-emerald-500 border-emerald-500 text-black' 
+                      : 'border-zinc-600'
+                    }`}
+                  >
+                    {isSelected && <Check className="h-3 w-3" />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-zinc-200 break-all">{repo.name}</p>
+                    {repo.description && (
+                      <p className="text-xs text-zinc-500 line-clamp-1 mt-1">{repo.description}</p>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+            
+            {!loadingRepos && reposListing.length === 0 && (
+              <p className="text-sm text-zinc-500">No public repositories found for sinonymousx.</p>
+            )}
+          </div>
+        </div>
+
         {/* Connections */}
         <div className="border border-zinc-800 bg-zinc-900/50 rounded-lg p-6 space-y-4">
           <h2 className="text-lg font-semibold text-zinc-200 flex items-center gap-2">
@@ -71,17 +167,6 @@ export default function SettingsPage() {
                 </div>
               </div>
               <span className="text-emerald-400 text-sm">Connected</span>
-            </div>
-            
-            <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <Github className="h-5 w-5 text-zinc-500" />
-                <div>
-                  <p className="text-sm font-medium text-zinc-200">GitHub</p>
-                  <p className="text-xs text-zinc-500">sinonymousx/wednesday-dashboard</p>
-                </div>
-              </div>
-              <span className="text-emerald-400 text-sm">Synced</span>
             </div>
           </div>
         </div>

@@ -105,7 +105,12 @@ export default function Home() {
         const res = await fetch("/api/dashboard", { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to fetch /api/dashboard");
         const json = await res.json();
-        setData(json);
+        setData(prev => ({
+          ...prev,
+          ...json,
+          // If onSnapshot fired first, keep its antigravity object instead of overwriting with potentially stale API data
+          antigravity: prev.antigravity || json.antigravity
+        }));
       } catch (e) {
         console.error(e);
       }

@@ -25,7 +25,7 @@ export default function WorkspacesPage() {
         const res = await fetch("/api/dashboard", { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to fetch state");
         const json = await res.json();
-        setAntigravity(json.antigravity || { status: 'idle' });
+        setAntigravity(prev => prev || json.antigravity || { status: 'idle' });
         setLoading(false);
       } catch (e) {
         console.error(e);
