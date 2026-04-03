@@ -104,7 +104,7 @@ const activityColors: Record<string, string> = {
   error: "bg-red-950/30 text-red-400 border-red-900/50",
 };
 
-export default function Dashboard({ activity, isRunningTask, currentTask, memoryFiles, criticalTasks, telemetry, onboarding, calendarCritical, cprStatus }: DashboardProps) {
+export default function Dashboard({ activity, isRunningTask, currentTask, memoryFiles, criticalTasks, telemetry, onboarding, calendarCritical, cprStatus, antigravity }: DashboardProps) {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
   const handleAction = async (action: string) => {
@@ -228,8 +228,8 @@ export default function Dashboard({ activity, isRunningTask, currentTask, memory
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-zinc-500 text-sm">Status</span>
-                  <span className={`text-[10px] uppercase px-2 py-1 rounded border ${telemetry?.model /* using this as a hack or just default to the prop */ === 'x' ? '' : (antigravity?.status === 'running' ? 'text-amber-300 border-amber-900 bg-amber-950/40 animate-pulse' : antigravity?.status === 'error' ? 'text-red-300 border-red-900 bg-red-950/40' : 'text-emerald-300 border-emerald-900 bg-emerald-950/40')}`}>
-                    {antigravity?.status || 'IDLE'}
+                  <span className={`text-[10px] uppercase px-2 py-1 rounded border ${antigravity?.status === 'running' ? 'text-amber-300 border-amber-900 bg-amber-950/40 animate-pulse' : antigravity?.status === 'error' ? 'text-red-300 border-red-900 bg-red-950/40' : 'text-emerald-300 border-emerald-900 bg-emerald-950/40'}`}>
+                    {antigravity?.status || 'idle'}
                   </span>
                 </div>
                 <div className="flex items-start justify-between gap-3">
