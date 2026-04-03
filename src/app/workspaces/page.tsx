@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/sidebar";
 import { FolderTree, Terminal, Zap, ArrowRight, Loader2, GitBranch, Play } from "lucide-react";
+import { getFirestore, doc, onSnapshot } from "firebase/firestore";
+import { app } from "@/lib/firebase";
 
 type AntigravityState = {
   status: "idle" | "running" | "error"; 
@@ -17,30 +19,32 @@ export default function WorkspacesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let cancelled = false;
+    // 1. Initial fetch
     const fetchState = async () => {
       try {
         const res = await fetch("/api/dashboard", { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to fetch state");
         const json = await res.json();
-        if (!cancelled) {
-          setAntigravity(json.antigravity || { status: 'idle' });
-          setLoading(false);
-        }
+        setAntigravity(json.antigravity || { status: 'idle' });
+        setLoading(false);
       } catch (e) {
         console.error(e);
-        if (!cancelled && loading) setLoading(false);
+        if (loading) setLoading(false);
       }
     };
-    
     fetchState();
-    const interval = setInterval(fetchState, 3000);
-    
-    return () => { 
-      cancelled = true; 
-      clearInterval(interval);
-    };
-  }, []);
+
+    // 2. Real-time Firebase listener
+    if (!app) return;
+    const db = getFirestore(app);
+    const unsubscribe = onSnapshot(doc(db, "dashboard", "antigravity"), (doc) => {
+      if (doc.exists()) {
+        setAntigravity(doc.data() as any);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [loading]);
 
   return (
     <DashboardLayout>

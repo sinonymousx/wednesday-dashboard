@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Dashboard from "@/components/dashboard";
+import { getFirestore, doc, onSnapshot } from "firebase/firestore";
+import { app } from "@/lib/firebase";
 
 type DashboardTask = {
   id: string;
@@ -96,26 +98,32 @@ export default function Home() {
   const [data, setData] = useState<DashboardData>(() => fallbackData());
 
   useEffect(() => {
-    let cancelled = false;
-
+    // 1. Initial full fetch via API (keeps secret keys server-side for admin stuff)
     const fetchDashboard = async () => {
       try {
         const res = await fetch("/api/dashboard", { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to fetch /api/dashboard");
         const json = await res.json();
-        if (!cancelled) setData(json);
+        setData(json);
       } catch (e) {
         console.error(e);
       }
     };
-
     fetchDashboard();
-    const interval = setInterval(fetchDashboard, 3000);
 
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
+    // 2. Real-time Firebase listener for Antigravity state
+    if (!app) return;
+    const db = getFirestore(app);
+    const unsubscribe = onSnapshot(doc(db, "dashboard", "antigravity"), (doc) => {
+      if (doc.exists()) {
+        setData(prev => ({
+          ...prev,
+          antigravity: doc.data() as any
+        }));
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   return (

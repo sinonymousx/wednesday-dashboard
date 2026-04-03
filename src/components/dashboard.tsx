@@ -170,7 +170,7 @@ export default function Dashboard({ activity, isRunningTask, currentTask, memory
         body: JSON.stringify({ action, ...data }),
       });
       if (!res.ok) throw new Error('Antigravity update failed');
-      window.location.reload();
+      // window.location.reload(); // Removed because onSnapshot handles UI updates
     } catch (e) {
       console.error(e);
       alert('Failed to update antigravity state');
